@@ -20,7 +20,8 @@ int main(int argc, char* argv[])
     unsigned char message[MAX_INFO]; /* message pour l'application */
     paquet_t p_data, p_ack; /* paquet utilisé par le protocole */
     int fin = 0; /* condition d'arrêt */
-    int nump = 0; /* numero du prochain paquet à recevoir */
+    int num_pp = 0; /* numero du prochain paquet à recevoir */
+    int num_p_ack = 0; /* numero du prochain ack à envoyer */
 
 
     init_reseau(RECEPTION);
@@ -37,8 +38,11 @@ int main(int argc, char* argv[])
         /* si pas d'erreur dans la paquet reçu */
         if (verifier_controle(p_data)) {
 
+            /* initialisation paquet d'acquittement positif */
+            p_ack.type = ACK;
+
             /* si le paquet reçu est le prochain à recevoir */
-            if (p_data.num_seq == nump) {
+            if (p_data.num_seq == num_pp) {
 
                 /* extraction des donnees du paquet recu */
                 for (int i=0; i<p_data.lg_info; i++) {
@@ -47,19 +51,20 @@ int main(int argc, char* argv[])
                 /* remise des données à la couche application */
                 fin = vers_application(message, p_data.lg_info);
 
+                p_ack.num_seq = num_p_ack;
+                num_p_ack = inc(MODULO, num_p_ack);
+
             /* sinon */
             } else {
                 /* Le paquet reçu est dupliqué */
                 printf("%s[TRP] Paquet dupliqué.%s\n", RED, NRM);
             }
 
-            /* initialisation paquet d'acquittement positif */
-            p_ack.type = ACK;
             /* remise à la couche reseau de l'acquittement */
             vers_reseau(&p_ack);
 
-            /* incrémentation du numéro de séquence du paquet à recevoir */
-            nump = inc(2, nump);
+            /* incrémentation du numéro de séquence du prochain paquet à recevoir */
+            num_pp = inc(MODULO, num_pp);
 
         /* sinon */
         } else {

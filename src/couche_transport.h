@@ -6,6 +6,8 @@
 #define MAX_INFO 96
 #define RED "\x1B[31m"
 #define NRM "\x1B[0m"
+#define MODULO 2
+#define TIMER 200
 
 /*************************
 * Structure d'un paquet *
@@ -40,10 +42,34 @@ typedef struct paquet_s {
 /* Fonctions utilitaires couche transport */
 /* ************************************** */
 
+/*
+ * Genere la somme de controle du paquet en parametres
+ * Paramètres (en entrée):
+ *  - paquet : paquet sur lequel on doit faire la somme de controle
+ * Renvoie :
+ *  - somme : somme de controle generé
+ */
 uint8_t generer_controle(paquet_t paquet);
 
+/*
+ * Verifie la somme de controle sur un paquet
+ * Paramètres (en entrée):
+ *  - donnees : données à remonter à l'application
+ *  - taille_msg : taille des données en octets
+ * Renvoie :
+ *    -> 1 si le récepteur n'a plus rien à écrire (fichier terminé)
+ *    -> 0 sinon
+ */
 bool verifier_controle(paquet_t paquet);
 
+/*
+ * Incremente le numero du prochain paquet en fonction du modulo
+ * Paramètres (en entrée):
+ *  - modulo : modulo du numero du paquet
+ *  - num_pp : numero du paquet actuel
+ * Renvoie :
+ *    - numero du prochain paquet
+ */
 int inc(int modulo, int numpp);
 
 /*--------------------------------------*

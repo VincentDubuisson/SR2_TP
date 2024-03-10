@@ -10,15 +10,20 @@
 
 
 /*
- * Paramètres (en entree):
- *   - paquet :
+ * Genere la somme de controle du paquet en parametres
+ * Paramètres (en entrée):
+ *  - paquet : paquet sur lequel on doit faire la somme de controle
+ * Renvoie :
+ *  - somme : somme de controle generé
  */
 uint8_t generer_controle(paquet_t paquet) {
 
     uint8_t somme;
 
+    /* calcul de la somme de controle sur l'en-tete du paquet */
     somme = paquet.type ^ paquet.num_seq ^ paquet.lg_info;
 
+    /* calcul de la somme de controle sur la data du paquet */
     for (int i = 0; i < MAX_INFO; i++) {
         somme ^= paquet.info[i];
     }
@@ -40,21 +45,28 @@ bool verifier_controle(paquet_t paquet) {
     //récupération de la somme de controle
     uint8_t somme1 = paquet.somme_ctrl;
 
+    /* calcul de la somme de controle sur l'en-tete du paquet */
     uint8_t somme2 = paquet.type ^ paquet.num_seq ^ paquet.lg_info;
 
+    /* calcul de la somme de controle sur la data du paquet */
     for (int i = 0; i < MAX_INFO; i++) {
         somme2 ^= paquet.info[i];
     }
 
-    if (somme1 == somme2) {
-      return true;
-    }
-    return false;
+    return somme1 == somme2;
 }
 
-int inc(int modulo, int numpp) {
-    numpp++;
-    return numpp % modulo;
+/*
+ * Incremente le numero du prochain paquet en fonction du modulo
+ * Paramètres (en entrée):
+ *  - modulo : modulo du numero du paquet
+ *  - num_pp : numero du paquet actuel
+ * Renvoie :
+ *    - numero du prochain paquet
+ */
+int inc(int modulo, int num_pp) {
+    num_pp++;
+    return num_pp % modulo;
 }
 
 
