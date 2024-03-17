@@ -20,10 +20,8 @@ uint8_t generer_controle(paquet_t paquet) {
 
     uint8_t somme;
 
-    /* calcul de la somme de controle sur l'en-tete du paquet */
     somme = paquet.type ^ paquet.num_seq ^ paquet.lg_info;
 
-    /* calcul de la somme de controle sur la data du paquet */
     for (int i = 0; i < MAX_INFO; i++) {
         somme ^= paquet.info[i];
     }
@@ -45,10 +43,8 @@ bool verifier_controle(paquet_t paquet) {
     //récupération de la somme de controle
     uint8_t somme1 = paquet.somme_ctrl;
 
-    /* calcul de la somme de controle sur l'en-tete du paquet */
     uint8_t somme2 = paquet.type ^ paquet.num_seq ^ paquet.lg_info;
 
-    /* calcul de la somme de controle sur la data du paquet */
     for (int i = 0; i < MAX_INFO; i++) {
         somme2 ^= paquet.info[i];
     }

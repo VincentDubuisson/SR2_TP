@@ -45,18 +45,17 @@ int main(int argc, char* argv[])
         /* initialisation de la somme de controle */
         p_data.somme_ctrl = generer_controle(p_data);
 
-        /* faire */
         do {
             /* remise à la couche reseau */
             vers_reseau(&p_data);
 
             /* départ du temporisateur*/
-            depart_temporisateur(TIMER);
+            depart_temporisateur(TEMPO_TIME_V2);
 
             /* on attend de recevoir un acquittement ou la fin du timer */
             evt = attendre();
 
-            /* Tant que l'on ne reçoit pas de paquet acquittement */
+            /* Tant que l'on ne reçoit pas de paquet acquittement ou fin du timer */
             int stop = 0;
             while (evt != -1) {
 
@@ -64,15 +63,14 @@ int main(int argc, char* argv[])
                 vers_reseau(&p_data);
 
                 /* départ du temporisateur*/
-                depart_temporisateur(TIMER);
+                depart_temporisateur(TEMPO_TIME_V2);
 
                 /* on attend de recevoir un acquittement ou la fin du timer */
                 evt = attendre();
 
-                /* si perte du dernier ack donc fin du timer + de 20 fois*/
-                if (stop == 20) {
+                if (stop == 20) {/* si perte du dernier ack */
                     printf("%s[TRP] Recepteur inactif !%s\n", RED, NRM);
-                    return 0;
+                    return 1;
                 }
                 stop++;
             }
@@ -83,14 +81,12 @@ int main(int argc, char* argv[])
             /* arret du temporisateur */
             arret_temporisateur();
 
-        /* tant que l'ack reçu n'est pas celui à recevoir */
         } while (p_ack.num_seq != num_ack);
 
 
         /* incrémentation du numéro de séquence du paquet à émettre avec modulo*/
-        num_pp = inc(MODULO, num_pp);
-        /* incrémentation du numéro de séquence de l'ack à recevoir avec modulo*/
-        num_ack = inc(MODULO, num_ack);
+        num_pp = inc(MODULO_V2, num_pp);
+        num_ack = inc(MODULO_V2, num_ack);
 
         /* lecture des donnees suivantes de la couche application */
         de_application(message, &taille_msg);

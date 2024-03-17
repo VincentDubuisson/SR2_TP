@@ -6,8 +6,11 @@
 #define MAX_INFO 96
 #define RED "\x1B[31m"
 #define NRM "\x1B[0m"
-#define MODULO 2
-#define TIMER 200
+#define MODULO_V2 3
+#define MODULO_V3 16
+/* en milliseconde */
+#define TEMPO_TIME_V2 200
+#define TEMPO_TIME_V3 1000
 
 /*************************
 * Structure d'un paquet *

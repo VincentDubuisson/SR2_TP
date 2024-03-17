@@ -1,6 +1,6 @@
 /*************************************************************
-* proto_tdd_v2 -  récepteur                                  *
-* TRANSFERT DE DONNEES  v2                                   *
+* proto_tdd_v3 -  récepteur                                  *
+* TRANSFERT DE DONNEES  v3                                   *
 *                                                            *
 * Protocole sans contrôle de flux, sans reprise sur erreurs  *
 *                                                            *
@@ -21,7 +21,8 @@ int main(int argc, char* argv[])
     paquet_t p_data, p_ack; /* paquet utilisé par le protocole */
     int fin = 0; /* condition d'arrêt */
     int num_pp = 0; /* numero du prochain paquet à recevoir */
-    int num_ack = 0; /* numéro du prochain ack à envoyer */
+    int num_ack = 0; /* numero du prochain ack à envoyer */
+
 
     init_reseau(RECEPTION);
 
@@ -51,7 +52,7 @@ int main(int argc, char* argv[])
                 fin = vers_application(message, p_data.lg_info);
 
                 p_ack.num_seq = num_ack;
-                num_ack = inc(MODULO_V2, num_ack);
+                num_ack = inc(MODULO_V3, num_ack);
 
             /* sinon */
             } else {
@@ -63,7 +64,7 @@ int main(int argc, char* argv[])
             vers_reseau(&p_ack);
 
             /* incrémentation du numéro de séquence du prochain paquet à recevoir */
-            num_pp = inc(MODULO_V2, num_pp);
+            num_pp = inc(MODULO_V3, num_pp);
 
         /* sinon */
         } else {
