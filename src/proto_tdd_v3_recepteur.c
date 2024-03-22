@@ -20,8 +20,9 @@ int main(int argc, char* argv[])
     unsigned char message[MAX_INFO]; /* message pour l'application */
     paquet_t p_data, p_ack; /* paquet utilisé par le protocole */
     int fin = 0; /* condition d'arrêt */
-    int num_pp = 0; /* numero du prochain paquet à recevoir */
     int num_ack = 0; /* numero du prochain ack à envoyer */
+    int inf = 0; /* borne inférieur */
+    int taille_fe = 1; /* taille de la fenêtre d'emission */
 
 
     init_reseau(RECEPTION);
@@ -35,14 +36,16 @@ int main(int argc, char* argv[])
         /* récupération du paquet de data */
         de_reseau(&p_data);
 
-        /* si pas d'erreur dans la paquet reçu */
+        printf("paquet recu = %d\n", p_data.num_seq);
+
+        /* si le paquet reçu est sans erreur */
         if (verifier_controle(p_data)) {
 
             /* initialisation paquet d'acquittement positif */
             p_ack.type = ACK;
 
             /* si le paquet reçu est le prochain à recevoir */
-            if (p_data.num_seq == num_pp) {
+            if (dans_fenetre(inf, p_data.num_seq, taille_fe)) {
 
                 /* extraction des donnees du paquet recu */
                 for (int i=0; i<p_data.lg_info; i++) {
@@ -51,25 +54,33 @@ int main(int argc, char* argv[])
                 /* remise des données à la couche application */
                 fin = vers_application(message, p_data.lg_info);
 
+                inf++;
+
                 p_ack.num_seq = num_ack;
+
+                /* remise à la couche reseau de l'acquittement */
+                vers_reseau(&p_ack);
+
+                printf("ack envoyé = %d\n", p_ack.num_seq);
+
+                /* incrémentation du numero du paquet d'acquittement */
                 num_ack = inc(MODULO_V3, num_ack);
 
             /* sinon */
             } else {
-                /* Le paquet reçu est dupliqué */
-                printf("%s[TRP] Paquet dupliqué.%s\n", RED, NRM);
+                /* remise à la couche reseau de l'acquittement */
+                vers_reseau(&p_ack);
+
+                printf("ack envoyé = %d\n", p_ack.num_seq);
+
+                /* Hors séquence donc renvoie du dernier ack */
+                printf("%s[TRP] Paquet hors séquence %s\n", RED, NRM);
             }
-
-            /* remise à la couche reseau de l'acquittement */
-            vers_reseau(&p_ack);
-
-            /* incrémentation du numéro de séquence du prochain paquet à recevoir */
-            num_pp = inc(MODULO_V3, num_pp);
 
         /* sinon */
         } else {
             /* Erreur donc aucun acquittement n'est envoyé */
-            printf("%s[TRP] Erreur détecté dans la paquet.%s\n", RED, NRM);
+            printf("%s[TRP] Erreur détecté dans la paquet %s\n", RED, NRM);
         }
     }
 

@@ -22,10 +22,12 @@ int main(int argc, char* argv[])
     int taille_msg; /* taille du message */
     paquet_t p_data, p_ack; /* paquet utilisé par le protocole */
     int num_pp = 0; /* numéro du prochain paquet à envoyer */
+    int test = 0;
     int num_ack = 0; /* numéro du prochain ack à recevoir */
     int inf = 0; /* borne inférieur */
-    int taille_fe = 7; /* taille de la fenêtre d'emission */
+    int taille_fe = 4; /* taille de la fenêtre d'emission */
     int evt;
+    paquet_t fenetre[taille_fe];
 
     /* TODO finir */
     /*if (argc == 2) {
@@ -50,20 +52,29 @@ int main(int argc, char* argv[])
 
     /* tant que l'émetteur a des données à envoyer */
     while ( taille_msg != 0 ) {
-        /* construction paquet */
-        for (int i=0; i<taille_msg; i++) {
-            p_data.info[i] = message[i];
-        }
-        p_data.lg_info = taille_msg; /* initialisation de la taille du msg */
-        p_data.type = DATA; /* initialisation du type du paquet */
-        p_data.num_seq = num_pp; /* initialisation du numéro de séquence */
-        /* initialisation de la somme de controle */
-        p_data.somme_ctrl = generer_controle(p_data);
 
-        /* Si le paquet à envoyer est dans la fenêtre d'emission */
-        if (dans_fenetre(inf, num_pp, taille_fe)) {
+        /* Tant que le paquet à envoyer est dans la fenêtre d'emission */
+        while (dans_fenetre(inf, num_pp, taille_fe)) {
+
+            printf("inf = %d\n", inf);
+            /* construction paquet */
+            for (int i=0; i<taille_msg; i++) {
+                p_data.info[i] = message[i];
+            }
+            p_data.lg_info = taille_msg; /* initialisation de la taille du msg */
+            p_data.type = DATA; /* initialisation du type du paquet */
+            p_data.num_seq = num_pp; /* initialisation du numéro de séquence */
+            /* initialisation de la somme de controle */
+            p_data.somme_ctrl = generer_controle(p_data);
+
+            fenetre[test] = p_data;
+            printf("tab_fe[%d] = %d\n", test, p_data.num_seq);
+            test = inc(taille_fe, test);
+
             /* remise à la couche reseau */
             vers_reseau(&p_data);
+
+            printf("paquet envoyé = %d\n", p_data.num_seq);
 
             /* Si le paquet à envoyer est le premier de la fenêtre d'emission */
             if (inf == num_pp) {
@@ -73,8 +84,13 @@ int main(int argc, char* argv[])
             /* incrementation du numero de paquet (le curseur de la fenêtre)*/
             num_pp = inc(MODULO_V3, num_pp);
 
-        /* Si le paquet à envoyer n'est pas dans la fenêtre d'emission */
-        } else {
+            /* lecture des donnees suivantes de la couche application */
+            de_application(message, &taille_msg);
+        }
+
+        // ICI AJOUTER UNE VARIABLE QUI DECALE AUTRE QUE INF
+        while (inf < num_pp) {
+
             /* on attend de recevoir un acquittement ou la fin du timer */
             evt = attendre();
 
@@ -82,38 +98,40 @@ int main(int argc, char* argv[])
             if (evt == -1) {
                 /* récupération du paquet d'acquittement */
                 de_reseau(&p_ack);
+                printf("ack recu = %d\n", p_ack.num_seq);
 
                 /* si l'acquittement reçu est celui attendu */
                 if (p_ack.num_seq == num_ack) {
                     /* incrementation du numero de ack à recevoir */
                     num_ack = inc(MODULO_V3, num_ack);
-                    /* décalage de la fenêtre d'emission */
                     inf = num_ack;
 
                 /* sinon si l'ack reçu correspond à un paquet dans la fe */
-                } else if (p_ack.num_seq > num_ack
-                  && dans_fenetre(inf, num_ack, taille_fe)) {
+                } else if (dans_fenetre(inf, p_ack.num_seq, taille_fe)) {
                     /* incrementation du numero du prochain ack à recevoir */
                     num_ack = inc(MODULO_V3, p_ack.num_seq);
-                    /* décalage de la fenêtre d'emission */
                     inf = num_ack;
+
+                    arret_temporisateur();
                 }
 
             /* sinon, le temporisateur s'est arrêté */
             } else {
-                /* TODO réémission jusqu'au curseur voir feuille TD */
+                printf("inf = %d\nnum_pp = %d\n", inf, num_pp);
+                /* réémission jusqu'au curseur */
+                for (int i = inf; i < num_pp; i++) {
 
+                  /* remise à la couche reseau */
+                  p_data = fenetre[i];
+                  vers_reseau(&p_data);
+                  printf("ré paquet envoyé = %d\ninf = %d\n", p_data.num_seq, inf);
+                }
             }
 
-
-
-
-
         }
+        inf = taille_fe;
 
 
-        /* lecture des donnees suivantes de la couche application */
-        de_application(message, &taille_msg);
     }
 
     printf("[TRP] Fin execution protocole transfert de donnees (TDD).\n");
