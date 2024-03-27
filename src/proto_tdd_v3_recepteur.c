@@ -36,8 +36,6 @@ int main(int argc, char* argv[])
         /* récupération du paquet de data */
         de_reseau(&p_data);
 
-        printf("paquet recu = %d\n", p_data.num_seq);
-
         /* si le paquet reçu est sans erreur */
         if (verifier_controle(p_data)) {
 
@@ -54,14 +52,12 @@ int main(int argc, char* argv[])
                 /* remise des données à la couche application */
                 fin = vers_application(message, p_data.lg_info);
 
-                inf++;
+                inf = inc(MODULO_V3, inf);
 
                 p_ack.num_seq = num_ack;
 
                 /* remise à la couche reseau de l'acquittement */
                 vers_reseau(&p_ack);
-
-                printf("ack envoyé = %d\n", p_ack.num_seq);
 
                 /* incrémentation du numero du paquet d'acquittement */
                 num_ack = inc(MODULO_V3, num_ack);
@@ -70,8 +66,6 @@ int main(int argc, char* argv[])
             } else {
                 /* remise à la couche reseau de l'acquittement */
                 vers_reseau(&p_ack);
-
-                printf("ack envoyé = %d\n", p_ack.num_seq);
 
                 /* Hors séquence donc renvoie du dernier ack */
                 printf("%s[TRP] Paquet hors séquence %s\n", RED, NRM);

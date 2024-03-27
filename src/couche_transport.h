@@ -6,11 +6,12 @@
 #define MAX_INFO 96
 #define RED "\x1B[31m"
 #define NRM "\x1B[0m"
+#define FIN_BCL 30
 #define MODULO_V2 3
 #define MODULO_V3 16
 /* en milliseconde */
 #define TEMPO_TIME_V2 200
-#define TEMPO_TIME_V3 1000
+#define TEMPO_TIME_V3 100
 
 /*************************
 * Structure d'un paquet *
@@ -39,7 +40,7 @@ typedef struct paquet_s {
 
 
 /* Capacite de numerotation */
-#define SEQ_NUM_SIZE 8
+#define SEQ_NUM_SIZE 16
 
 /* ************************************** */
 /* Fonctions utilitaires couche transport */
